@@ -1,97 +1,85 @@
-<template>
+ <template>
     <div>
-        <div class="card o-hidden border-0 shadow-lg my-5">
-            <div class="card-body p-0">
-                <!-- Nested Row within Card Body -->
-                <div class="row">
-                    <div class="col-lg-5 d-none d-lg-block bg-register-image"></div>
-                    <div class="col-lg-7">
-                        <div class="p-5">
-                            <div class="text-center">
-                                <h1 class="h4 text-gray-900 mb-4">Add new category <router-link to="/category" class="btn btn-info">All category</router-link></h1>
-                            </div>
-                            <form @submit.prevent="addCategory" class="user">
-                                <div class="form-group row">
-                                    <div class="col-sm-6 mb-3 mb-sm-0">
-                                        <label>Category name</label>
-                                        <input type="text" v-model="form.name" class="form-control form-control-user" id="exampleFirstName"
-                                            placeholder="Name">
-                                        <small class="text-danger"
-                                                v-if="errors.name">{{ errors.name[0] }}</small>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label>Parent Category name (Optional)</label>
-                                        <v-select :options="categories"
-                                        :reduce="category => category.id"
-                                         label="name"
-                                         v-model="form.parent_category_id">
-                                        </v-select>
-                                        <!-- <input type="email" v-model="form.email" class="form-control form-control-user" id="exampleInputEmail"
-                                        placeholder="Email Address"> -->
-                                        <small class="text-danger"
-                                                v-if="errors.parent_category_id">{{ errors.parent_category_id[0] }}</small>
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary btn-user btn-block"> Save </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        <!-- Breadcrumbs-->
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="#">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item active">Category</li>
+        </ol>
+        <!-- Icon Cards-->
+       <div class="row container">
+         <div class="card col-lg-12">
+          <div class="card-header">
+            <i class="fas fa-chart-area"></i>
+            Category Insert 
+            <router-link to="/category" class="btn btn-sm btn-info" id="add_new"> All Category</router-link>
+          </div>
+          <form @submit.prevent="categoryInsert">
+            <div class="card-body">
+                <div class="form-group">
+	              <div class="form-row">
+	               <div class="col-md-12">
+	                <div class="form-label-group">
+	                  <input type="text" v-model="form.category_name" class="form-control"   required="">
+	                  <small class="text-danger" v-if="errors.category_name">{{ errors.category_name[0] }}</small>
+	                  <label for="firstName">Category Name</label>
+	                </div>
+	               </div>
+	             </div>
+	            </div>     
+	          </div>
+              <button type="submit" class="btn btn-success">Submit</button>
+            </form>
+          </div>
+          <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+         </div>
+       </div>
+   </div>
 </template>
 
 <script>
-export default {
-    data() {
-        return {
-            categories: [],
-            form: {
-                name: '',
-                parent_category_id: '',
-            },
-            errors: {}
-        }
-    },
 
-    created()
-    {
-        if (! Helper.loggedIn()) {
-            this.$router.push({name: '/'});
-        }
-        this.getCategory();
-    },
-
-    methods: {
-        getCategory() {
-            axios.get('/api/categories')
-            .then(response => {
-                this.categories = response.data;
-                console.log(response.data);
-            })
-            .catch(error => {
-                Notification.notify('Ops! Something wnt wrong', 'error');       
-            });
+    export default {
+    	mounted(){
+            if (!User.loggedIn()) {
+               this.$router.push({ name:'/' })
+            } 
         },
-        addCategory() {
-            axios.post('/api/categories', this.form)
-            .then(response => {
-                Notification.notify('Category successfully added!', 'success');
-                this.$router.push({name: 'category'});
-            })
-            .catch(error => {
-                if (error.response.status === 401) {
-                    Notification.notify('Ops! Something wnt wrong', 'error');
-                } else {
-                    this.errors = error.response.data.errors
-                }                
-            });
+        data(){
+        	return{
+        		form:{
+        			category_name :''
+        		},
+        		errors:{},
+        	}
+        },
+        
+
+        methods:{ 	
+        	categoryInsert(){
+        		axios.post('/api/category/',this.form)
+        		.then(() => {
+        			this.$router.push({ name: 'category' })
+        			Notification.success()
+        		})
+        		.catch(error => this.errors = error.response.data.errors)
+        	},
+        	
         }
+
+    	
     }
-}
+
+
+
+  
 </script>
 
-<style scoped>
+<style>
+	
+#add_new{
+	float: right;
+}
 
 </style>

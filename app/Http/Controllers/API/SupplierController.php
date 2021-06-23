@@ -1,24 +1,24 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\Api;
 
-use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Intervention\Image\Facades\Image;
-
+use App\Supplier;
+use DB;
+use Image;
 class SupplierController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+   
+
+
     public function index()
     {
-        return response()->json(Supplier::all());
+        $supplier=Supplier::all();
+        return response()->json($supplier);
     }
 
+  
     /**
      * Store a newly created resource in storage.
      *
@@ -27,32 +27,39 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'name' => 'required',
-            'email' => 'required|unique:suppliers,email',
-            'phone' => 'required|unique:suppliers,phone',
-            'address' => 'required',
+         $validatedData = $request->validate([
+         'name' => 'required',
+         'email' => 'required',
+         'phone' => 'required|unique:suppliers',
         ]);
 
-        $supplier = new Supplier();
+            if($request->photo){
+                   $position = strpos($request->photo, ';');
+                   $sub=substr($request->photo, 0 ,$position);
+                   $ext=explode('/', $sub)[1];
+                   $name=time().".".$ext;
+                   $img=Image::make($request->photo)->resize(240,200);
+                   $upload_path='backend/supplier/';
+                   $image_url=$upload_path.$name;
+                   $img->save($image_url);
 
-        if ($request->photo) {
-            $position = strpos($request->photo, ';');
-            $sub = substr($request->photo, 0, $position);
-            $ext = explode('/', $sub)[1];
-            $name = time() . '.' . $ext;
-            $img = Image::make($request->photo)->resize(300, 300);
-            $path = 'assets/img/supplier/' . $name;
-            $img->save($path);
-
-            $supplier->photo = $name;
-        }
-
-        $supplier->name = $request->name;
-        $supplier->email = $request->email;
-        $supplier->address = $request->address;
-        $supplier->phone = $request->phone;
-        $supplier->save();
+                   $supplier = new Supplier;
+                   $supplier->name = $request->name;
+                   $supplier->email = $request->email;
+                   $supplier->phone = $request->phone;
+                   $supplier->address = $request->address;
+                   $supplier->shopname = $request->shopname;
+                   $supplier->photo =  $image_url;
+                   $supplier->save();
+            }else{
+                   $supplier = new Supplier;
+                   $supplier->name = $request->name;
+                   $supplier->email = $request->email;
+                   $supplier->phone = $request->phone;
+                   $supplier->address = $request->address;
+                   $supplier->shopname = $request->shopname;
+                   $supplier->save();
+            }
     }
 
     /**
@@ -63,10 +70,10 @@ class SupplierController extends Controller
      */
     public function show($id)
     {
-        $supplier = Supplier::findOrFail($id);
-
+        $supplier=DB::table('suppliers')->where('id',$id)->first();
         return response()->json($supplier);
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -77,33 +84,35 @@ class SupplierController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->validate($request, [
-            'name' => 'required',
-            'email' => 'required|unique:suppliers,email,' . $id,
-            'phone' => 'required|unique:suppliers,phone,' . $id,
-            'address' => 'required',
-        ]);
-
-        $supplier = Supplier::findOrFail($id);
-
-        if ($request->photo) {
-            $position = strpos($request->photo, ';');
-            $sub = substr($request->photo, 0, $position);
-            $ext = explode('/', $sub)[1];
-            $name = time() . '.' . $ext;
-            $img = Image::make($request->photo)->resize(300, 300);
-            $path = 'assets/img/supplier/' . $name;
-            $img->save($path);
-
-            unlink(public_path('assets/img/supplier/' . $supplier->photo));
-            $supplier->photo = $name;
-        }
+        $data=array();
+        $data['name']=$request->name;
+        $data['email']=$request->email;
+        $data['phone']=$request->phone;
+        $data['address']=$request->address;
+        $data['shopname']=$request->shopname;
+        $image=$request->newphoto;
+      if ($image) {
+           $position = strpos($image, ';');
+           $sub=substr($image, 0 ,$position);
+           $ext=explode('/', $sub)[1];
+           $name=time().".".$ext;
+           $img=Image::make($image)->resize(240,200);
+           $upload_path='backend/supplier/';
+           $image_url=$upload_path.$name;
+           $success=$img->save($image_url);
+       if  ($success) {
+             $data['photo']=$image_url;
+             $img=DB::table('suppliers')->where('id',$id)->first();
+             $image_path = $img->photo;
+             $done=unlink($image_path);
+             $user=DB::table('suppliers')->where('id',$id)->update($data); 
+           }
+       }else{
+           $oldlogo=$request->photo;       
+           $data['photo']=$oldlogo;  
+           DB::table('suppliers')->where('id',$id)->update($data); 
         
-        $supplier->name = $request->name;
-        $supplier->email = $request->email;
-        $supplier->address = $request->address;
-        $supplier->phone = $request->phone;
-        $supplier->save();
+       }
     }
 
     /**
@@ -114,12 +123,13 @@ class SupplierController extends Controller
      */
     public function destroy($id)
     {
-        $supplier = Supplier::findOrFail($id);
-
-        if ($supplier->photo) {
-            unlink(public_path('assets/img/supplier/' . $supplier->photo));
-        }
-
-        $supplier->delete();
+       $supplier=DB::table('suppliers')->where('id',$id)->first();
+       $photo=$supplier->photo;
+       if ($photo) {
+          unlink($photo);
+          DB::table('suppliers')->where('id',$id)->delete();
+       }else{
+          DB::table('suppliers')->where('id',$id)->delete();
+       }
     }
 }

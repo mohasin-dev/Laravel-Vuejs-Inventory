@@ -2,87 +2,59 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use DB;
 class AuthController extends Controller
 {
-    /**
+        /**
      * Create a new AuthController instance.
      *
      * @return void
      */
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('JWT',['except' => ['login','signup']]);
     }
-
     /**
-     * Signup the usesr
-     */
-    public function register(Request $request)
-    {
-        $this->validate($request, [
-            'name'     => 'required',
-            'email'    => 'required|email',
-            'phone'    => 'required',
-            'password' => 'required|min:6|confirmed',
-        ]);
-
-        $user = new User();
-        $user->name     = $request->name;
-        $user->email    = $request->email;
-        $user->phone    = $request->phone;
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        return $this->login($request);
-    }
-
-    /**
-     * Get a JWT token via given credentials.
-     *
-     * @param  \Illuminate\Http\Request  $request
+     * Get a JWT via given credentials.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request)
     {
-        $this->validate($request, [
-            'email' => 'required|email',
-            'password' => 'required'
+        $validatedData = $request->validate([
+            'email' => 'required',
+            'password' => 'required',
         ]);
+        $credentials = request(['email', 'password']);
 
-        $credentials = $request->only('email', 'password');
-
-        if ($token = $this->guard()->attempt($credentials)) {
-            return $this->respondWithToken($token);
+        if (! $token = auth()->attempt($credentials)) {
+            return response()->json(['error' => 'Email or Password Invalid'], 401);
         }
 
-        return response()->json(['error' => 'Unauthorized'], 401);
+        return $this->respondWithToken($token);
     }
 
     /**
-     * Get the authenticated User
+     * Get the authenticated User.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function me()
     {
-        return response()->json($this->guard()->user());
+        return response()->json(auth()->user());
     }
 
     /**
-     * Log the user out (Invalidate the token)
+     * Log the user out (Invalidate the token).
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function logout()
     {
-        $this->guard()->logout();
+        auth()->logout();
 
         return response()->json(['message' => 'Successfully logged out']);
     }
@@ -94,7 +66,24 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken($this->guard()->refresh());
+        return $this->respondWithToken(auth()->refresh());
+    }
+
+    public function signup(Request $request)
+    {
+         $validatedData = $request->validate([
+            'email' => 'required|unique:users|max:255',
+            'name' => 'required',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+         $data=array();
+         $data['name']=$request->name;
+         $data['email']=$request->email;
+         $data['password'] = Hash::make($request->password);
+         DB::table('users')->insert($data);
+
+         return $this->login($request);
     }
 
     /**
@@ -109,19 +98,10 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'id' => $this->guard()->user()->id,
-            'name' => $this->guard()->user()->name,
-            'email' => $this->guard()->user()->email,
+            'expires_in' => auth()->factory()->getTTL() * 60,
+            'name' => auth()->user()->name,
+            'user_id' => auth()->user()->id,
+            'email' => auth()->user()->email,
         ]);
-    }
-
-    /**
-     * Get the guard to be used during authentication.
-     *
-     * @return \Illuminate\Contracts\Auth\Guard
-     */
-    public function guard()
-    {
-        return Auth::guard();
     }
 }

@@ -1,134 +1,90 @@
-<template>
+ <template>
     <div>
-        <div class="card o-hidden border-0 shadow-lg my-5">
-            <div class="card-body p-0">
-                <!-- Nested Row within Card Body -->
-                <div class="row">
-                    <div class="col-lg-5 d-none d-lg-block bg-register-image"></div>
-                    <div class="col-lg-7">
-                        <div class="p-5">
-                            <div class="text-center">
-                                <h1 class="h4 text-gray-900 mb-4">Add new supplier <router-link to="/supplier" class="btn btn-info">All supplier</router-link></h1>
-                            </div>
-                            <form @submit.prevent="updateSupplier" class="user">
-                                <div class="form-group row">
-                                    <div class="col-sm-6 mb-3 mb-sm-0">
-                                        <input type="text" v-model="form.name" class="form-control form-control-user" id="exampleFirstName"
-                                            placeholder="Name">
-                                        <small class="text-danger"
-                                                v-if="errors.name">{{ errors.name[0] }}</small>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <input type="email" v-model="form.email" class="form-control form-control-user" id="exampleInputEmail"
-                                        placeholder="Email Address">
-                                        <small class="text-danger"
-                                                v-if="errors.email">{{ errors.email[0] }}</small>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                        <textarea type="text" v-model="form.address" class="form-control form-control-user" id="exampleFirstName"
-                                            placeholder="Address"></textarea>
-                                        <small class="text-danger"
-                                                v-if="errors.address">{{ errors.address[0] }}</small>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-6 mb-3 mb-sm-0">
-                                        <input type="text" v-model="form.phone" class="form-control form-control-user" id="exampleFirstName"
-                                            placeholder="Phone Number">
-                                        <small class="text-danger"
-                                                v-if="errors.phone">{{ errors.phone[0] }}</small>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-6">
-                                        <label>Photo</label><br>
-                                        <input type="file" @change="onFileSelected">
-                                        <small class="text-danger"
-                                                v-if="errors.photo">{{ errors.photo[0] }}</small>
-                                    </div>
-                                    <div class="col-sm-6 text-center">
-                                        <img :src="form.photo" alt="Photo" width="100" height="50px">
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary btn-user btn-block"> Save </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        <!-- Breadcrumbs-->
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="#">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item active">Category</li>
+        </ol>
+        <!-- Icon Cards-->
+       <div class="row container">
+         <div class="card col-lg-12">
+          <div class="card-header">
+            <i class="fas fa-chart-area"></i>
+            Category Update 
+            <router-link to="/category" class="btn btn-sm btn-info" id="add_new"> All Category</router-link>
+          </div>
+          <div class="card-body">
+          	  <form @submit.prevent="caetgoryUpdate">
+                <div class="form-group">
+	              <div class="form-row">
+	               <div class="col-md-12">
+	                <div class="form-label-group">
+	                  <input type="text" v-model="form.category_name" class="form-control"   required="">
+	                  <small class="text-danger" v-if="errors.category_name">{{ errors.category_name[0] }}</small>
+	                  <label for="firstName">Category Name</label>
+	                </div>
+	               </div>
+	             </div>
+	          </div>
+              <button type="submit" class="btn btn-success">Update</button>
+           </form>
+          </div>
+          <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+         </div>
+       </div>
+   </div>
 </template>
 
 <script>
-export default {
-    data() {
-        return {
-            form: {
-                name: '',
-                email: '',
-                address: '',
-                phone: '',
-                photo: '',
-            },
-            errors: {}
-        }
-    },
 
-    created()
-    {
-        if (! Helper.loggedIn()) {
-            this.$router.push({name: '/'});
-        }
-
-        this.getsupplier();
-    },
-
-    methods: {
-        getsupplier() {
-            let id = this.$route.params.id
-            axios.get(`/api/suppliers/${id}`)
-            .then(response =>  {
-                this.form = response.data;
-                this.form.photo = '';
-            })
-            .catch(error => {
-                Notification.notify('Ops! something wnt wrong', 'error');        
-            });
+    export default {
+    	mounted(){
+            if (!User.loggedIn()) {
+               this.$router.push({ name:'/' })
+            } 
         },
-        onFileSelected(event) {
-            let file = event.target.files[0];
-            if (file.size > 1000000) {
-                Notification.notify('Image must be less than 1 mb', 'warning');
-            } else {
-                let reader = new FileReader();
-                reader.onload = event => {
-                    this.form.photo = event.target.result
-                }
-                reader.readAsDataURL(file);
-            }
+        data(){
+        	return{
+        		form:{
+        			category_name :''
+        		
+        		},
+        		errors:{},
+        	}
         },
-
-        updateSupplier() {
-            let id = this.$route.params.id
-            axios.patch(`/api/suppliers/${id}`, this.form)
-            .then(response =>  {
-                Notification.notify('supplier successfully updated!', 'success');
-                this.$router.push({name: 'supplier'});
-            })
-            .catch(error => {
-                if (error.response.status === 401) {
-                    Notification.notify('Ops! something wnt wrong', 'error');
-                } else {
-                    this.errors = error.response.data.errors
-                }                
-            });
+        created(){
+        	let id = this.$route.params.id
+        	axios.get('/api/category/'+id)
+        	.then(({data}) => (this.form = data))
+        	.catch()
+        },
+        methods:{ 	
+        	caetgoryUpdate(){
+        		let id = this.$route.params.id
+        		axios.patch('/api/category/'+id,this.form)
+        		.then(() => {
+        			this.$router.push({ name: 'category' })
+        			Notification.success()
+        		})
+        		.catch(error => this.errors = error.response.data.errors)
+        	},
+        	
         }
-        
+
+    	
     }
-}
+
+
+
+  
 </script>
 
-<style scoped>
+<style>
+	
+#add_new{
+	float: right;
+}
 
 </style>
