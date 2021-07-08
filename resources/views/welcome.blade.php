@@ -48,8 +48,8 @@
     </form> --}}
 
     <!-- Navbar -->
-    {{-- <ul class="navbar-nav ml-auto ml-md-0">
-      <li class="nav-item dropdown no-arrow mx-1">
+    <ul class="navbar-nav d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">
+      {{-- <li class="nav-item dropdown no-arrow mx-1">
         <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           <i class="fas fa-bell fa-fw"></i>
           <span class="badge badge-danger">9+</span>
@@ -72,18 +72,17 @@
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#">Something else here</a>
         </div>
-      </li>
+      </li> --}}
       <li class="nav-item dropdown no-arrow">
         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span id="username"></span>
           <i class="fas fa-user-circle fa-fw"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-          <a class="dropdown-item" href="#">Settings</a>
-          <div class="dropdown-divider"></div>
           <router-link class="dropdown-item" to="/logout">Logout</router-link>
         </div>
       </li>
-    </ul> --}}
+    </ul>
 
   </nav>
 
@@ -230,6 +229,8 @@
   <script src="{{ asset('backend/vendor/jquery/jquery.min.js')}}"></script>
  <script type="text/javascript">
    let token = localStorage.getItem('token');
+   let username = localStorage.getItem('user');
+   document.getElementById('username').innerText = username;
    if (token) {
     $("#topbar").css("display","");
     $("#leftbar").css("display","");
