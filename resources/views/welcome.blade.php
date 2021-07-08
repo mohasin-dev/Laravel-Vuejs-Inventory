@@ -199,12 +199,12 @@
           <router-link class="dropdown-item" to="/salary">Salary Details</router-link>
         </div>
       </li>
-      <li class="nav-item">
+      {{-- <li class="nav-item">
         <router-link class="nav-link" to="#">
           <i class="fas fa-fw fa-table"></i>
           <span>Settings</span>
         </router-link>
-      </li>
+      </li> --}}
     </ul>
 
     <div id="content-wrapper">
